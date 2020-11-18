@@ -159,5 +159,24 @@ RSpec.describe Shoryuken::Processor do
         subject.process
       end
     end
+
+    context 'when specifying a reloader' do
+      before do
+        Shoryuken.reloader = proc do |_|
+          TestWorker.new.called
+        end
+      end
+
+      after do
+        Shoryuken.reloader = proc { |&block| block.call }
+      end
+
+      it 'wraps execution in reloader' do
+        expect_any_instance_of(TestWorker).to receive(:called)
+        expect_any_instance_of(TestWorker).to_not receive(:perform)
+
+        subject.process
+      end
+    end
   end
 end

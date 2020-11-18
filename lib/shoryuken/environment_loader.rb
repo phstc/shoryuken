@@ -70,6 +70,13 @@ module Shoryuken
             ::Rails.application.config.eager_load = true
           end
         end
+        ::Rails::Application.initializer 'shoryuken.set_reloader_hook' do |app|
+          Shoryuken.reloader = proc do |&block|
+            app.reloader.wrap do
+              block.call
+            end
+          end
+        end
         require 'shoryuken/extensions/active_job_adapter' if Shoryuken.active_job?
         require File.expand_path('config/environment.rb')
       end

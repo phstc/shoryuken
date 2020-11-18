@@ -14,11 +14,13 @@ module Shoryuken
     end
 
     def process
-      return logger.error { "No worker found for #{queue}" } unless worker
+      Shoryuken.reloader.call do
+        return logger.error { "No worker found for #{queue}" } unless worker
 
-      Shoryuken::Logging.with_context("#{worker_name(worker.class, sqs_msg, body)}/#{queue}/#{sqs_msg.message_id}") do
-        worker.class.server_middleware.invoke(worker, queue, sqs_msg, body) do
-          worker.perform(sqs_msg, body)
+        Shoryuken::Logging.with_context("#{worker_name(worker.class, sqs_msg, body)}/#{queue}/#{sqs_msg.message_id}") do
+          worker.class.server_middleware.invoke(worker, queue, sqs_msg, body) do
+            worker.perform(sqs_msg, body)
+          end
         end
       end
     rescue Exception => ex

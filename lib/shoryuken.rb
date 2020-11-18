@@ -69,6 +69,8 @@ module Shoryuken
     :sqs_client=,
     :sqs_client_receive_message_opts,
     :sqs_client_receive_message_opts=,
+    :reloader,
+    :reloader=,
     :options,
     :logger,
     :register_worker,

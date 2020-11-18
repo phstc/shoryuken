@@ -15,7 +15,7 @@ module Shoryuken
     }.freeze
 
     attr_accessor :active_job_queue_name_prefixing, :cache_visibility_timeout, :groups,
-                  :launcher_executor,
+                  :launcher_executor, :reloader,
                   :start_callback, :stop_callback, :worker_executor, :worker_registry
     attr_writer :default_worker_options, :sqs_client
     attr_reader :sqs_client_receive_message_opts
@@ -26,6 +26,7 @@ module Shoryuken
       self.active_job_queue_name_prefixing = false
       self.worker_executor = Worker::DefaultExecutor
       self.cache_visibility_timeout = false
+      self.reloader = proc { |&block| block.call }
       # this is needed for keeping backward compatibility
       @sqs_client_receive_message_opts ||= {}
     end
