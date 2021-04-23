@@ -34,14 +34,16 @@ module Shoryuken
       defined?(::ActiveJob)
     end
 
-    def add_group(group, concurrency = nil, delay: nil)
+    def add_group(group, concurrency = nil, delay: nil, polling_strategy: 'WeightedRoundRobin')
       concurrency ||= options[:concurrency]
       delay ||= options[:delay]
+      polling_strategy ||= polling_strategy
 
       groups[group] ||= {
         concurrency: concurrency,
         delay: delay,
-        queues: []
+        queues: [],
+        polling_strategy: polling_strategy
       }
     end
 
@@ -56,7 +58,17 @@ module Shoryuken
     end
 
     def polling_strategy(group)
-      strategy = (group == 'default' ? options : options[:groups].to_h[group]).to_h[:polling_strategy]
+      strategy = \
+        if group == 'default'
+          options.to_h[:polling_strategy]
+        elsif options[:groups].nil?
+          # checks given group for polling strategy
+          groups.to_h[group].to_h[:polling_strategy]
+        else
+          # checks option hash for polling strategy
+          options[:groups].to_h[group].to_h[:polling_strategy]
+        end
+
       case strategy
       when 'WeightedRoundRobin', nil # Default case
         Polling::WeightedRoundRobin
