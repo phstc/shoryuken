@@ -94,7 +94,7 @@ module Shoryuken
     end
 
     def configure_server
-      yield self if server?
+      yield self if server? || inline_executor?
     end
 
     def server_middleware
@@ -159,9 +159,15 @@ module Shoryuken
       @active_job_queue_name_prefixing
     end
 
+    def inline_executor?
+      worker_executor == Worker::InlineExecutor
+    end
+
     private
 
     def default_server_middleware
+      return Middleware::Chain.new if inline_executor?
+
       Middleware::Chain.new do |m|
         m.add Middleware::Server::Timing
         m.add Middleware::Server::ExponentialBackoffRetry
