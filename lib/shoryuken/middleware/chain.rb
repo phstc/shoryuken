@@ -93,11 +93,13 @@ module Shoryuken
 
       def invoke(*args, &final_action)
         chain = retrieve.dup
-        traverse_chain = lambda do
+        traverse_chain = lambda do |*modified_args|
+          next_args = modified_args.any? ? modified_args : args
+
           if chain.empty?
-            final_action.call
+            final_action.call(*next_args)
           else
-            chain.shift.call(*args, &traverse_chain)
+            chain.shift.call(*next_args, &traverse_chain)
           end
         end
         traverse_chain.call

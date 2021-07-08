@@ -34,6 +34,49 @@ RSpec.describe Shoryuken::Processor do
       subject.process
     end
 
+    context 'when custom middleware modifies arguments' do
+      let(:queue) { 'middleware_modifies_body' }
+
+      class BodyModifyingMiddleware
+        def call(worker, queue, sqs_msg, _body)
+          yield(worker, queue, sqs_msg, 'new_body')
+        end
+      end
+
+      before do
+        class BodyModifyingMiddlewareWorker
+          include Shoryuken::Worker
+
+          shoryuken_options queue: 'middleware_modifies_body'
+
+          def perform(sqs_msg, body); end
+        end
+
+        allow_any_instance_of(Shoryuken::Options).to receive(:server?).and_return(true)
+        BodyModifyingMiddlewareWorker.instance_variable_set(:@_server_chain, nil) # un-memoize middleware
+
+        Shoryuken.configure_server do |config|
+          config.server_middleware do |chain|
+            chain.add BodyModifyingMiddleware
+          end
+        end
+      end
+
+      after do
+        Shoryuken.configure_server do |config|
+          config.server_middleware do |chain|
+            chain.remove BodyModifyingMiddleware
+          end
+        end
+      end
+
+      it 'calls worker with modified body' do
+        expect_any_instance_of(BodyModifyingMiddlewareWorker).to receive(:perform).with(sqs_msg, 'new_body')
+
+        subject.process
+      end
+    end
+
     context 'when custom middleware' do
       let(:queue) { 'worker_called_middleware' }
 
