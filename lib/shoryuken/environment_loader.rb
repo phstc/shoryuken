@@ -43,11 +43,19 @@ module Shoryuken
 
       fail ArgumentError, "The supplied config file #{path} does not exist" unless File.exist?(path)
 
-      if (result = YAML.load(ERB.new(IO.read(path)).result))
+      if (result = load_config_file(path))
         result.deep_symbolize_keys
       else
         {}
       end
+    end
+
+    def load_config_file(path)
+      YAML.load(ERB.new(IO.read(path)).result)
+    rescue NameError => ex
+      fail(
+        "Rails and other constants not yet loaded. You can use ENV, or move your config to an initializer:\n#{ex.message}"
+      )
     end
 
     def initialize_logger
