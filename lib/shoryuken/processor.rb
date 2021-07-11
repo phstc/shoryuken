@@ -22,7 +22,7 @@ module Shoryuken
         end
       end
     rescue Exception => ex
-      logger.error { "Processor failed: #{ex.message}" }
+      logger.error { "Processor failed: Exception: #{ex.class.name} with message:#{ex.message}" }
       logger.error { ex.backtrace.join("\n") } unless ex.backtrace.nil?
 
       raise

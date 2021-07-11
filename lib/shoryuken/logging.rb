@@ -16,10 +16,19 @@ module Shoryuken
     end
 
     def self.with_context(msg)
-      Thread.current[:shoryuken_context] = msg
+      if logger.respond_to?(:add_context)
+        logger.add_context(msg)
+      else
+        Thread.current[:shoryuken_context] ||= []
+        Thread.current[:shoryuken_context] << msg
+      end
       yield
     ensure
-      Thread.current[:shoryuken_context] = nil
+      if logger.respond_to?(:clear_context!)
+        logger.clear_context!
+      else
+        Thread.current[:shoryuken_context] = nil
+      end
     end
 
     def self.initialize_logger(log_target = STDOUT)
