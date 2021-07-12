@@ -30,7 +30,11 @@ module Shoryuken
     end
 
     def self.logger
-      @logger || initialize_logger
+      unless defined? @logger
+        @logger = initialize_logger
+      end
+      
+      @logger
     end
 
     def self.logger=(log)
